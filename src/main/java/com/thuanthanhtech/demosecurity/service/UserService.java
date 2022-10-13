@@ -13,4 +13,7 @@ public interface UserService extends UserDetailsService {
 
     void changeAccountPassword(User user, String password);
 
+    String forgotPassword(String email);
+
+    String resetPassword(String token, String password);
 }

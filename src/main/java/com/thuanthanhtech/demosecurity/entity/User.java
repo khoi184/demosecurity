@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Set;
 
 @Entity
@@ -23,7 +24,7 @@ public class User {
     private String username;
     private String password;
     private String email;
-    private String resetPasswordToken;
+    private String token;
     @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime expiredToken;
 

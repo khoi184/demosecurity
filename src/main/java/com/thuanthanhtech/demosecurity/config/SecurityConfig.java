@@ -38,8 +38,7 @@ public class SecurityConfig {
         http
                 .csrf().disable();
         http.authorizeRequests()
-                .antMatchers("/api/admin","/api/admin/**")
-                .hasRole("ADMIN")
+                .antMatchers("/api/admin","/api/admin/**").hasRole("ADMIN")
                 .anyRequest().permitAll()
                 .and()
                 .logout()

@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpSession;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthApi {
 
@@ -48,19 +48,5 @@ public class AuthApi {
     public ResponseEntity<?> logout(HttpSession session) {
         session.invalidate();
         return new ResponseEntity<>("Logout successfully!", HttpStatus.OK);
-    }
-
-    @PostMapping("/change-password")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> changePassword(@RequestParam("old-password") String oldPassword,
-                                            @RequestParam("new-password") String newPassword) throws Exception {
-        User user = userService.findByUsername(
-                SecurityContextHolder.getContext().getAuthentication().getName()
-        );
-        if (!userService.checkIfValidOldPassword(user, oldPassword)) {
-            throw new Exception("Invalid Old Password!");
-        }
-        userService.changeAccountPassword(user, newPassword);
-        return new ResponseEntity<String>("Change password successful!", HttpStatus.OK);
     }
 }
