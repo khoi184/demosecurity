@@ -35,6 +35,9 @@ public class DataSeeder implements ApplicationListener<ContextRefreshedEvent> {
         if (roleRepository.findByName("ROLE_ADMIN") == null) {
             role.setName("ROLE_ADMIN");
             roleRepository.save(role);
+        }else if (roleRepository.findByName("ROLE_USER") == null) {
+            role.setName("ROLE_USER");
+            roleRepository.save(role);
         }
 
         if (userRepository.findByEmail("admin@gmail.com") == null) {
@@ -50,6 +53,21 @@ public class DataSeeder implements ApplicationListener<ContextRefreshedEvent> {
             admin.setRole(roles);
             userRepository.save(admin);
             log.info(admin.getUsername() +" user is added. " + admin.getUsername() + " has Admin Role.");
+        }
+
+        if (userRepository.findByEmail("khoinguyen.shini.2@gmail.com") == null) {
+            Set<Role> roles = new HashSet<>();
+            Role roleUser = roleRepository.findByName("ROLE_USER");
+            roles.add(roleUser);
+
+            User user = new User();
+
+            user.setEmail("khoinguyen.shini.2@gmail.com");
+            user.setPassword(passwordEncoder().encode("123456"));
+            user.setUsername("khoinguyen");
+            user.setRole(roles);
+            userRepository.save(user);
+            log.info(user.getUsername() +" user is added. " + user.getUsername() + " has Admin Role.");
         }
     }
 }

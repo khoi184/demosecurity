@@ -7,6 +7,7 @@ import com.thuanthanhtech.demosecurity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -116,6 +117,22 @@ public class UserServiceImpl implements UserService {
         Duration diff = Duration.between(tokenCreationDate, now);
 
         return diff.toMinutes() >= EXPIRE_TOKEN_AFTER_MINUTES;
+    }
+
+    @Override
+    public User findByToken(String token) {
+        return userRepository.findByToken(token);
+    }
+
+    @Override
+    public void updateResetPasswordToken(String token, String email) throws Exception {
+        User user = userRepository.findByEmail(email);
+        if (user != null) {
+            user.setToken(token);
+            userRepository.save(user);
+        } else {
+            throw new Exception("Could not find any customer with the email " + email);
+        }
     }
 }
 

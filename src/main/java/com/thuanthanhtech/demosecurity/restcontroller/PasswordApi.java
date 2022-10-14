@@ -1,13 +1,20 @@
 package com.thuanthanhtech.demosecurity.restcontroller;
 
 import com.thuanthanhtech.demosecurity.entity.User;
+import com.thuanthanhtech.demosecurity.service.EmailService;
 import com.thuanthanhtech.demosecurity.service.UserService;
+import com.thuanthanhtech.demosecurity.util.Utility;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+
+import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
+import java.io.UnsupportedEncodingException;
 
 @RestController
 @RequestMapping("/api/password")
@@ -15,6 +22,8 @@ import org.springframework.web.bind.annotation.*;
 public class PasswordApi {
 
     private final UserService userService;
+
+    private final EmailService emailService;
 
     @PostMapping("/change-password")
     @PreAuthorize("hasRole('ADMIN')")
@@ -31,14 +40,23 @@ public class PasswordApi {
     }
 
     @PostMapping("/forgot-password")
-    public String forgotPassword(@RequestParam("email") String email) {
+    public String forgotPassword(@RequestParam("email") String email, HttpServletRequest request) {
 
-        String response = userService.forgotPassword(email);
+        String token = userService.forgotPassword(email);
+        try {
 
-        if (!response.startsWith("Invalid")) {
-            response = "http://localhost:8080/reset-password?token=" + response;
+            if (!token.startsWith("Invalid")) {
+                token = Utility.getSiteURL(request) + "/reset-password?token=" + token;
+                emailService.sendEmail(email, token);
+            }
+        } catch (UsernameNotFoundException e) {
+            e.getMessage();
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
-        return response;
+        return "Email has been sent!";
     }
 
     @PutMapping("/reset-password")
