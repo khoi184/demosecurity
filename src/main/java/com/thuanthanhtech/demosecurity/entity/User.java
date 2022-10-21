@@ -17,6 +17,9 @@ import java.util.Set;
 @AllArgsConstructor
 @Table(name = "users")
 public class User {
+
+    private static final long OTP_VALID_DURATION = 5 * 60 * 1000;   // 5 minutes
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
@@ -27,6 +30,28 @@ public class User {
     private String token;
     @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime expiredToken;
+
+    private Integer oneTimePassword;
+
+    private Date otpRequestedTime;
+
+
+//    public boolean isOTPRequired() {
+//        if (this.getOneTimePassword() == null) {
+//            return false;
+//        }
+//
+//        long currentTimeInMillis = System.currentTimeMillis();
+//        long otpRequestedTimeInMillis = this.otpRequestedTime.getTime();
+//
+//        if (otpRequestedTimeInMillis + OTP_VALID_DURATION < currentTimeInMillis) {
+//            // OTP expires
+//            return false;
+//        }
+//
+//        return true;
+//    }
+
 
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinTable(name = "roles_users",

@@ -1,6 +1,8 @@
 package com.thuanthanhtech.demosecurity.restcontroller;
 
 import com.thuanthanhtech.demosecurity.entity.User;
+import com.thuanthanhtech.demosecurity.exception.FailOTPException;
+import com.thuanthanhtech.demosecurity.exception.UserNotFoundException;
 import com.thuanthanhtech.demosecurity.service.EmailService;
 import com.thuanthanhtech.demosecurity.service.UserService;
 import com.thuanthanhtech.demosecurity.util.Utility;
@@ -28,19 +30,24 @@ public class PasswordApi {
     @PostMapping("/change-password")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> changePassword(@RequestParam("old-password") String oldPassword,
-                                                 @RequestParam("new-password") String newPassword) throws Exception {
-        User user = userService.findByUsername(
-                SecurityContextHolder.getContext().getAuthentication().getName()
-        );
+                                                 @RequestParam("new-password") String newPassword,
+                                                 @RequestParam("username") String username) throws Exception {
+        User user = userService.findByUsername(username);
+
         if (!userService.checkIfValidOldPassword(user, oldPassword)) {
             throw new Exception("Invalid Old Password!");
         }
-        userService.changeAccountPassword(user, newPassword);
-        return new ResponseEntity<String>("Change password successful!", HttpStatus.OK);
+
+        if (user.getUsername().equals(username)) {
+            userService.changeAccountPassword(user, newPassword);
+            return new ResponseEntity<>("Change password successful!", HttpStatus.OK);
+        } else {
+            throw new UserNotFoundException(username);
+        }
     }
 
     @PostMapping("/forgot-password")
-    public String forgotPassword(@RequestParam("email") String email, HttpServletRequest request) {
+    public ResponseEntity<String> forgotPassword(@RequestParam("email") String email, HttpServletRequest request) {
 
         String token = userService.forgotPassword(email);
         try {
@@ -51,18 +58,42 @@ public class PasswordApi {
             }
         } catch (UsernameNotFoundException e) {
             e.getMessage();
-        } catch (MessagingException e) {
-            e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
+        } catch (MessagingException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        return "Email has been sent!";
+        return new ResponseEntity<>("Email has been sent with token: " + token, HttpStatus.OK);
     }
 
     @PutMapping("/reset-password")
-    public String resetPassword(@RequestParam("token") String token,
-                                @RequestParam("password") String password) {
+    public ResponseEntity<String> resetPassword(@RequestParam("token") String token,
+                                                @RequestParam("password") String password) {
 
-        return userService.resetPassword(token, password);
+        return new ResponseEntity<>(userService.resetPassword(token, password), HttpStatus.OK);
+    }
+
+    @PostMapping("/reset-default-password")
+    public ResponseEntity<String> resetDefaultPassword(@RequestParam("email") String email) throws MessagingException, UnsupportedEncodingException {
+
+        User user = userService.findByEmail(email);
+        Integer OTP = emailService.generateOneTimePassword(user);
+        try {
+            emailService.sendOtpEmail(userService.findByEmail(email), OTP);
+        } catch (UsernameNotFoundException e) {
+            e.getMessage();
+        } catch (MessagingException | UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return new ResponseEntity<>("Email has been sent with OTP: " + OTP, HttpStatus.OK);
+    }
+
+    @PutMapping("reset-default")
+    public ResponseEntity<String> resetToDefault(@RequestParam("email") String email,
+                                                 @RequestParam("otp") Integer otp) throws FailOTPException, UserNotFoundException {
+        try {
+            userService.validateOTP(otp, email);
+        } catch (MessagingException | UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return new ResponseEntity<>("Reset password successfully!", HttpStatus.OK);
     }
 }
