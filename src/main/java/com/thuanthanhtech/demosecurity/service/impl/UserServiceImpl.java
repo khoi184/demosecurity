@@ -117,10 +117,8 @@ public class UserServiceImpl implements UserService {
     }
 
     private String generateToken() {
-        StringBuilder token = new StringBuilder();
-
-        return token.append(UUID.randomUUID())
-                .append(UUID.randomUUID()).toString();
+        return String.valueOf(UUID.randomUUID()) +
+                UUID.randomUUID();
     }
 
     private boolean isTokenExpired(final LocalDateTime tokenCreationDate) {
