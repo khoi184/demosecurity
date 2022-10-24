@@ -35,24 +35,6 @@ public class User {
 
     private Date otpRequestedTime;
 
-
-//    public boolean isOTPRequired() {
-//        if (this.getOneTimePassword() == null) {
-//            return false;
-//        }
-//
-//        long currentTimeInMillis = System.currentTimeMillis();
-//        long otpRequestedTimeInMillis = this.otpRequestedTime.getTime();
-//
-//        if (otpRequestedTimeInMillis + OTP_VALID_DURATION < currentTimeInMillis) {
-//            // OTP expires
-//            return false;
-//        }
-//
-//        return true;
-//    }
-
-
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinTable(name = "roles_users",
                 joinColumns = @JoinColumn(name = "user_id"),

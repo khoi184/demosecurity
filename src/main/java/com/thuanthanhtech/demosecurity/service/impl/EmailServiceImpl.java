@@ -1,25 +1,18 @@
 package com.thuanthanhtech.demosecurity.service.impl;
 
-import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.Random;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import com.thuanthanhtech.demosecurity.entity.EmailDetails;
 import com.thuanthanhtech.demosecurity.entity.User;
 import com.thuanthanhtech.demosecurity.repository.UserRepository;
 import com.thuanthanhtech.demosecurity.service.EmailService;
 import lombok.RequiredArgsConstructor;
-import net.bytebuddy.utility.RandomString;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -30,9 +23,8 @@ public class EmailServiceImpl implements EmailService {
 
     private final JavaMailSender javaMailSender;
 
-    private final PasswordEncoder passwordEncoder;
-
-    @Value("${spring.mail.username}") private String sender;
+    @Value("${spring.mail.username}")
+    private String sender;
 
     public void sendEmail(String recipientEmail, String link)
             throws MessagingException, UnsupportedEncodingException {
@@ -83,8 +75,7 @@ public class EmailServiceImpl implements EmailService {
         javaMailSender.send(message);
     }
 
-    public Integer generateOneTimePassword(User user)
-            throws UnsupportedEncodingException, MessagingException {
+    public Integer generateOneTimePassword(User user){
         Random random = new Random();
         Integer OTP =100000 + random.nextInt(900000);
 
@@ -93,7 +84,6 @@ public class EmailServiceImpl implements EmailService {
 
         userRepository.save(user);
 
-        sendOtpEmail(user, OTP);
         return OTP;
     }
 
