@@ -3,7 +3,9 @@ package com.thuanthanhtech.demosecurity.restcontroller;
 import com.thuanthanhtech.demosecurity.config.CustomUserDetails;
 import com.thuanthanhtech.demosecurity.dto.LoginRequest;
 import com.thuanthanhtech.demosecurity.dto.LoginResponse;
+import com.thuanthanhtech.demosecurity.dto.SignUpDto;
 import com.thuanthanhtech.demosecurity.entity.User;
+import com.thuanthanhtech.demosecurity.exception.UsernameExistedException;
 import com.thuanthanhtech.demosecurity.jwt.JwtTokenUtil;
 import com.thuanthanhtech.demosecurity.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -48,5 +50,12 @@ public class AuthApi {
     public ResponseEntity<?> logout(HttpSession session) {
         session.invalidate();
         return new ResponseEntity<>("Logout successfully!", HttpStatus.OK);
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<?> registerUser(@RequestBody SignUpDto signUpDto) throws UsernameExistedException {
+        userService.registerUser(signUpDto);
+
+        return new ResponseEntity<>("User registered successfully", HttpStatus.OK);
     }
 }

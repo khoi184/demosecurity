@@ -1,19 +1,27 @@
 package com.thuanthanhtech.demosecurity.service.impl;
 
 import com.thuanthanhtech.demosecurity.config.CustomUserDetails;
+import com.thuanthanhtech.demosecurity.dto.SignUpDto;
+import com.thuanthanhtech.demosecurity.entity.Role;
 import com.thuanthanhtech.demosecurity.entity.User;
+import com.thuanthanhtech.demosecurity.exception.FailOTPException;
+import com.thuanthanhtech.demosecurity.exception.UserNotFoundException;
+import com.thuanthanhtech.demosecurity.exception.UsernameExistedException;
+import com.thuanthanhtech.demosecurity.repository.RoleRepository;
 import com.thuanthanhtech.demosecurity.repository.UserRepository;
+import com.thuanthanhtech.demosecurity.service.EmailService;
 import com.thuanthanhtech.demosecurity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -21,7 +29,11 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
+    private final RoleRepository roleRepository;
+
     private final PasswordEncoder passwordEncoder;
+
+    private final EmailService emailService;
 
     private static final long EXPIRE_TOKEN_AFTER_MINUTES = 30;
 
@@ -64,7 +76,7 @@ public class UserServiceImpl implements UserService {
         Optional<User> userOptional = Optional
                 .ofNullable(userRepository.findByEmail(email));
 
-        if (!userOptional.isPresent()) {
+        if (userOptional.isEmpty()) {
             return "Invalid email id.";
         }
 
@@ -83,7 +95,7 @@ public class UserServiceImpl implements UserService {
         Optional<User> userOptional = Optional
                 .ofNullable(userRepository.findByToken(token));
 
-        if (!userOptional.isPresent()) {
+        if (userOptional.isEmpty()) {
             return "Invalid token.";
         }
 
@@ -125,14 +137,62 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateResetPasswordToken(String token, String email) throws Exception {
+    public void updateResetPasswordToken(String token, String email) throws UserNotFoundException {
         User user = userRepository.findByEmail(email);
         if (user != null) {
             user.setToken(token);
             userRepository.save(user);
         } else {
-            throw new Exception("Could not find any customer with the email " + email);
+            throw new UserNotFoundException(email);
         }
+    }
+
+    @Override
+    public void registerUser(SignUpDto signUpDto) throws UsernameExistedException {
+        if (userRepository.existsByUsername(signUpDto.getUsername())) {
+            throw new UsernameExistedException();
+        } else {
+            Set<Role> roles = new HashSet<>();
+            Role userRole = roleRepository.findByName("ROLE_USER");
+            roles.add(userRole);
+
+            User user = new User();
+            user.setUsername(signUpDto.getUsername());
+            user.setEmail(signUpDto.getEmail());
+            user.setPassword(passwordEncoder.encode(signUpDto.getPassword()));
+            user.setRole(roles);
+            userRepository.save(user);
+        }
+    }
+
+    @Override
+    public void validateOTP(Integer otpNumber, String email) throws FailOTPException, UserNotFoundException {
+        Optional<User> optional = Optional.ofNullable(findByEmail(email));
+        if (optional.isPresent()) {
+            User u = optional.get();
+            //Validate the Otp
+            if (otpNumber >= 0) {
+                int serverOtp = u.getOneTimePassword();
+
+                if (serverOtp > 0) {
+                    if (otpNumber == serverOtp) {
+                        emailService.clearOTP(u);
+                        u.setPassword(passwordEncoder.encode("123456"));
+                        userRepository.save(u);
+                    } else {
+                        throw new FailOTPException();
+                    }
+                }
+            }
+        } else {
+            throw new UserNotFoundException(email);
+        }
+    }
+
+
+    @Override
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 }
 

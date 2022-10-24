@@ -37,8 +37,9 @@ public class SecurityConfig {
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
         http
                 .csrf().disable();
-        http.authorizeRequests()
-                .antMatchers("/api/admin","/api/admin/**").hasRole("ADMIN")
+        http
+                .authorizeRequests()
+                .antMatchers("/api/admin", "/api/admin/**").hasRole("ADMIN")
                 .anyRequest().permitAll()
                 .and()
                 .logout()
@@ -48,10 +49,10 @@ public class SecurityConfig {
         http.exceptionHandling()
                 .authenticationEntryPoint(
                         (request, response, ex) ->
-                            response.sendError(
-                                    HttpServletResponse.SC_UNAUTHORIZED,
-                                    ex.getMessage()
-                            )
+                                response.sendError(
+                                        HttpServletResponse.SC_UNAUTHORIZED,
+                                        ex.getMessage()
+                                )
                 );
 
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
