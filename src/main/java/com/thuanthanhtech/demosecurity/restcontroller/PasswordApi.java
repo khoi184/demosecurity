@@ -93,6 +93,6 @@ public class PasswordApi {
         } catch (MessagingException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        return new ResponseEntity<>("Password was reset to default: 123456!", HttpStatus.OK);
+        return new ResponseEntity<>("Password was reset to default: 123456", HttpStatus.OK);
     }
 }
